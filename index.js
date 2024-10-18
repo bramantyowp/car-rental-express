@@ -5,7 +5,7 @@ const express = require("express");
 const app = express();
 const path = require("path");
 const cors = require('cors');
-const routes = require('./src/routes/index')
+const routes = require('./src/routes/')
 const errorHandler = require("./src/middlewares/errorHandler");
 
 const { PORT = 3000 } = process.env;
