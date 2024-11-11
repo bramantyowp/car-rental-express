@@ -76,7 +76,7 @@ class AuthController extends BaseController {
 
   signUp = async (req, res, next) => {
     try {
-      const { email, password, fullname } = req.body;
+      const { email, password } = req.body;
       const user = await this.model.getOne({ where: { email } });
 
       if (user) return next(new ValidationError("Email already exist!"));
@@ -84,7 +84,6 @@ class AuthController extends BaseController {
       const newUser = await this.model.set({
         email,
         password: await encryptPassword(password),
-        fullname,
         roleId: 3
       });
 
