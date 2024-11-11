@@ -1,11 +1,11 @@
-const Joi = require("joi");
-const express = require("express");
-
-const BaseController = require("../base");
-const UserModel = require("../../models/user");
-const { checkPassword, encryptPassword } = require("../../helpers/bcrypt");
-const { createToken } = require("../../helpers/jwt");
-const { authorize } = require("../../middlewares/authorization");
+const Joi = require('joi');
+const express = require('express');
+const { ValidationError, ServerError } = require('../../errors');
+const { checkPassword, encryptPassword } = require('../../helpers/bcrypt');
+const { createToken } = require('../../helpers/jwt');
+const { authorize } = require('../../middlewares/authorization');
+const UserModel = require('../../models/user');
+const BaseController = require('../base');
 const router = express.Router();
 
 const user = new UserModel();
@@ -17,12 +17,10 @@ const signUpSchema = Joi.object({
     .required()
     .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/)
     .messages({
-      "string.min": `Password must length must be at least {#limit} 
-        characters long`,
-      "string.pattern.base": `Password must have at least 1 uppercase, 
-        1 lowercase, 1 number, and 1 special character (i.e. !@#$%^&*)`,
+      'string.min': `Password must be at least {#limit} characters long`,
+      'string.pattern.base': `Password must have at least 1 uppercase, 1 lowercase, 1 number, and 1 special character`,
     }),
-  fullname: Joi.string()
+  fullname: Joi.string(),
 });
 
 const signInSchema = Joi.object({
@@ -33,32 +31,24 @@ const signInSchema = Joi.object({
 class AuthController extends BaseController {
   constructor(model) {
     super(model);
-    router.post("/signin", this.validation(signInSchema), this.signIn);
-    router.post("/signup", this.validation(signUpSchema), this.signUp);
-    router.get('/whoami', authorize, this.whoAmI)
   }
 
   signIn = async (req, res, next) => {
     try {
       const { email, password } = req.body;
       const user = await this.model.getOne({ where: { email } });
-
-      if (!user) return next(new ValidationError("Invalid email or password"));
+      if (!user) return next(new ValidationError('Invalid email or password'));
 
       const isMatch = await checkPassword(password, user.password);
+      if (!isMatch) return next(new ValidationError('Invalid email or password'));
 
-      if (!isMatch)
-        return next(new ValidationError("Invalid email or password"));
-
-      const token = createToken({
-        id: user.id,
-      });
+      const token = createToken({ id: user.id });
 
       return res.status(200).json(
         this.apiSend({
           code: 200,
-          status: "success",
-          message: "Sign in successfully",
+          status: 'success',
+          message: 'Sign in successfully',
           data: {
             user: {
               ...user,
@@ -77,21 +67,21 @@ class AuthController extends BaseController {
   signUp = async (req, res, next) => {
     try {
       const { email, password } = req.body;
-      const user = await this.model.getOne({ where: { email } });
+      const existingUser = await this.model.getOne({ where: { email } });
 
-      if (user) return next(new ValidationError("Email already exist!"));
+      if (existingUser) return next(new ValidationError('Email already exists'));
 
       const newUser = await this.model.set({
         email,
         password: await encryptPassword(password),
-        roleId: 3
+        roleId: 3,
       });
 
       return res.status(200).json(
         this.apiSend({
           code: 200,
-          status: "success",
-          message: "Sign up successfully",
+          status: 'success',
+          message: 'Sign up successfully',
           data: {
             user: {
               ...newUser,
@@ -106,20 +96,24 @@ class AuthController extends BaseController {
     }
   };
 
-  whoAmI = async(req, res, next) => {
+  whoAmI = async (req, res, next) => {
     return res.status(200).json(
       this.apiSend({
         code: 200,
-        status: "success",
-        message: "Get user successfully",
+        status: 'success',
+        message: 'Get user successfully',
         data: {
           user: req.user,
         },
       })
     );
-  }
+  };
 }
 
-new AuthController(user);
+const authController = new AuthController(user);
+
+router.post('/signin', authController.validation(signInSchema), authController.signIn);
+router.post('/signup', authController.validation(signUpSchema), authController.signUp);
+router.get('/whoami', authorize, authController.whoAmI);
 
 module.exports = router;
