@@ -108,21 +108,19 @@ class AuthController extends BaseController {
   };
 
   whoAmI = async(req, res, next) => {
-    try {
-      return res.status(200).json(
-        this.apiSend({
-          code: 200,
-          status: "success",
-          message: "Get user successfully",
-          data: {
-            user: req.user,
-          },
-        })
-      );
-    } catch (e) {
-      next(new ServerError(e));
-    }
-  };
+    return res.status(200).json(
+      this.apiSend({
+        code: 200,
+        status: "success",
+        message: "Get user successfully",
+        data: {
+          user: req.user,
+        },
+      })
+    );
+  }
+}
+
 new AuthController(user);
 
 module.exports = router;
