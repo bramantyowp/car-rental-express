@@ -33,6 +33,7 @@ class AuthController extends BaseController {
     super(model);
     router.post("/signin", this.validation(signInSchema), this.signIn);
     router.post("/signup", this.validation(signUpSchema), this.signUp);
+    router.get ("/whome", authorize,this.whome);
   }
 
   signIn = async (req, res, next) => {
@@ -102,7 +103,18 @@ class AuthController extends BaseController {
       next(new ServerError(e));
     }
   };
-}
+  whome= async (req, res, next) => {
+    return res.status(200).json(
+        this.apiSend({
+          code: 200,
+          status: "success",
+          message: "get Data User",
+          data: {
+            user: req.user,
+          },
+        })
+      );
+};
 
 new AuthController(user);
 
