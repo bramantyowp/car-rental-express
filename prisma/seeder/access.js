@@ -12,6 +12,8 @@ const ACCESS = [
 ];
 
 async function accessSeed() {
+    const access = await prisma.access.findMany();
+  if(access.length) return;
   await prisma.access.deleteMany();
   return await prisma.access.createMany({
     data: ACCESS,
