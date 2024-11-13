@@ -17,6 +17,8 @@ const MENUS = [
 ];
 
 async function menuSeed() {
+   const menu = await prisma.menus.findMany();
+  if(menu.length) return;
   await prisma.menus.deleteMany()
   return await prisma.menus.createMany({
     data: MENUS,
