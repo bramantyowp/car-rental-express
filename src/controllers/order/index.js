@@ -48,7 +48,7 @@ class OrderController extends BaseController {
         return next(new ValidationError("Car not found or is not available!"));
 
       const getLastOrderToday = await this.model.count({
-        where:{
+        where: {
           createdDt: {
             lte: new Date(),
           },
@@ -60,9 +60,8 @@ class OrderController extends BaseController {
       const endTime = new Date(req.body.end_time);
       const total =
         getCars.price * ((endTime - startTime) / 1000 / 60 / 60 / 24);
-      const invNumber = `INV/${currentDate.getFullYear()}/${
-        currentDate.getMonth() + 1
-      }/${currentDate.getDate()}/${getLastOrderToday + 1}`;
+      const invNumber = `INV/${currentDate.getFullYear()}/${currentDate.getMonth() + 1
+        }/${currentDate.getDate()}/${getLastOrderToday + 1}`;
 
       const [result, carUpdate] = await this.model.transaction([
         this.model.set({
@@ -133,29 +132,31 @@ class OrderController extends BaseController {
     const { id } = req.params;
     try {
       const order = await this.model.getById(id, {
-        order_no: true,
-        createdDt: true,
-        status: true,
-        user_id: true,
-        start_time: true,
-        end_time: true,
-        total: true,
-        cars: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
+        select: {
+          order_no: true,
+          createdDt: true,
+          status: true,
+          user_id: true,
+          start_time: true,
+          end_time: true,
+          total: true,
+          cars: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+            },
           },
-        },
-        users:{
-          select:{
-            id: true,
-            fullname: true,
-            address: true
+          users: {
+            select: {
+              id: true,
+              fullname: true,
+              address: true
+            }
           }
         }
       });
-      
+
       if (order.status !== "paid") {
         return next(new ValidationError("Order not paid!"));
       }
