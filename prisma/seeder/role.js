@@ -20,7 +20,9 @@ const ROLE = [
 ];
 
 async function roleSeed() {
-  await prisma.roles.deleteMany();
+  const role = await prisma.roles.findMany();
+  if(role.length) return;
+  await prisma.roles.deleteMany()
   return await prisma.roles.createMany({
     data: ROLE,
   });
